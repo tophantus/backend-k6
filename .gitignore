@@ -1,6 +1,7 @@
 # Docker data volumes
 k6-tests/influxdb-data/
 k6-tests/grafana-data/
+k6-tests/k6/metrics
 
 # K6 summary files
 k6-tests/*.json
