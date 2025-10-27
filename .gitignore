@@ -5,6 +5,7 @@ k6-tests/grafana-data/
 # K6 summary files
 k6-tests/*.json
 k6-tests/*.csv
+k6-tests/.env
 
 # Node modules (mern backend)
 mern/node_modules/
