@@ -1,5 +1,4 @@
 import http from 'k6/http';
-import { check } from 'k6';
 import { BASE_URL, DEFAULT_HEADERS } from '../k6.config.js';
 
 export function get(path, headers = {}) {

@@ -3,15 +3,16 @@ import { getHeader, loginUser } from '../../helpers/auth.js';
 import { get, post } from '../../helpers/httpClient.js';
 import { getTestUser } from '../../helpers/user.js';
 import { generateRandomAddress } from '../../utils/address.js';
-import { API_ENDPOINT } from '../../constants/enpoint.js';
+import { API_ENDPOINT } from '../../constants/endpoint.js';
 
 export const options = {
   stages: [
-    { duration: '10s', target: 7 }, 
-    { duration: '20s', target: 15 }, 
-    { duration: '10s', target: 0 },  
+    { duration: '20s', target: 5 }, 
+    { duration: '40s', target: 20 }, 
+    { duration: '20s', target: 0 },  
   ],
 };
+
 
 export function setup() {
     const user = getTestUser();
@@ -32,5 +33,5 @@ export default function (data) {
         'is JSON': (r) => typeof r.json() === 'object'
     });
 
-    sleep(1);
+    sleep(0.2);
 }

@@ -1,9 +1,35 @@
+version: '3.8'
 services:
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+    volumes:
+      - ./influxdb-data:/var/lib/influxdb
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
   k6:
     image: grafana/k6
     container_name: k6-runner
+    depends_on:
+      - influxdb
     volumes:
       - ./k6:/scripts
     working_dir: /scripts
     command: >
-      run ${K6_SCRIPT} --summary-export=${K6_SUMMARY}
+      run --out influxdb=http://influxdb:8086/k6 ${K6_SCRIPT} --summary-export=${K6_SUMMARY}

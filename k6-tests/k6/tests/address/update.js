@@ -1,18 +1,18 @@
 import { check, sleep } from 'k6';
 import { getHeader, loginUser } from '../../helpers/auth.js';
 import { post, put } from '../../helpers/httpClient.js';
-import users from '../../data/users.json' assert { type: "json" };
 import { getTestUser } from '../../helpers/user.js';
 import { generateRandomAddress } from '../../utils/address.js';
-import { API_ENDPOINT } from '../../constants/enpoint.js';
+import { API_ENDPOINT } from '../../constants/endpoint.js';
 
 export const options = {
   stages: [
-    { duration: '5s', target: 1 }, 
-    { duration: '10s', target: 5 }, 
-    { duration: '50s', target: 2 },  
+    { duration: '20s', target: 5 }, 
+    { duration: '40s', target: 20 }, 
+    { duration: '20s', target: 0 },  
   ],
 };
+
 
 export function setup() {
     const user = getTestUser();
@@ -39,5 +39,5 @@ export default function (data) {
         'update success': (r) => r.json('success') === true,
     });
 
-    sleep(1);
+    sleep(0.2);
 }

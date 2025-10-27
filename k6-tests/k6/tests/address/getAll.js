@@ -2,13 +2,14 @@ import { check, sleep } from 'k6';
 import { getHeader, loginUser } from '../../helpers/auth.js';
 import { get } from '../../helpers/httpClient.js';
 import { getTestUser } from '../../helpers/user.js';
-import { API_ENDPOINT } from '../../constants/enpoint.js';
+import { API_ENDPOINT } from '../../constants/endpoint.js';
 
 export const options = {
   stages: [
-    { duration: '10s', target: 5 }, 
-    { duration: '20s', target: 10 }, 
-    { duration: '10s', target: 0 },  
+    { duration: '20s', target: 5 }, 
+    { duration: '30s', target: 20 },
+    { duration: '20s', target: 20 },
+    { duration: '20s', target: 0 },  
   ],
 };
 
@@ -27,5 +28,5 @@ export default function (data) {
         'returns address array': (r) => Array.isArray(r.json('addresses')),
     });
 
-    sleep(1);
+    sleep(0.2);
 }
