@@ -1,0 +1,9 @@
+services:
+  k6:
+    image: grafana/k6
+    container_name: k6-runner
+    volumes:
+      - ./k6:/scripts
+    working_dir: /scripts
+    command: >
+      run ${K6_SCRIPT} --summary-export=${K6_SUMMARY}

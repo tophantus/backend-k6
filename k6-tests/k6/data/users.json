@@ -1,0 +1,5 @@
+[
+  { "email": "user1@example.com", "firstName": "User1", "lastName": "A", "password": "pass1", "isSubscribed": false },
+  { "email": "user2@example.com", "firstName": "User2", "lastName": "B", "password": "pass2", "isSubscribed": false },
+  { "email": "user3@example.com", "firstName": "User3", "lastName": "C", "password": "pass3", "isSubscribed": false }
+]
