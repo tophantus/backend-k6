@@ -1,0 +1,20 @@
+# Docker data volumes
+k6-tests/influxdb-data/
+k6-tests/grafana-data/
+
+# K6 summary files
+k6-tests/*.json
+k6-tests/*.csv
+
+# Node modules (mern backend)
+mern/node_modules/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env file
+.env
