@@ -45,6 +45,53 @@ const seedDB = async () => {
       console.log(`${chalk.yellow('!')} ${chalk.yellow('Admin user already exists, skipping seeding for admin user.')}`);
     }
 
+    const userEmail = "user1@example.com";
+    const userPassword = "pass1";
+
+    const existingUser1 = await User.findOne({ email: userEmail });
+    if (!existingUser1) {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding user1...')}`);
+      const user1 = new User({
+        email: userEmail,
+        password: userPassword,
+        firstName: 'User1',
+        lastName: 'A',
+        isSubscribed: false,
+        role: ROLES.User
+      });
+
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(user1.password, salt);
+      user1.password = hash;
+      await user1.save();
+      console.log(`${chalk.green('✓')} ${chalk.green('User1 seeded.')}`);
+    } else {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('User1 already exists, skipping seeding for this user.')}`);
+    }
+
+    const merchantEmail = "merchant1@example.com";
+    const merchantPassword = "merchantpass";
+
+    const existingMerchant = await User.findOne({ email: merchantEmail });
+    if (!existingMerchant) {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding merchant user...')}`);
+      const merchantUser = new User({
+        email: merchantEmail,
+        password: merchantPassword,
+        firstName: 'Merchant',
+        lastName: 'One',
+        role: ROLES.Merchant,
+      });
+
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(merchantUser.password, salt);
+      merchantUser.password = hash;
+      await merchantUser.save();
+      console.log(`${chalk.green('✓')} ${chalk.green('Merchant user seeded.')}`);
+    } else {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Merchant user already exists, skipping seeding for merchant.')}`);
+    }
+
     const categoriesCount = await Category.countDocuments();
     if (categoriesCount >= NUM_CATEGORIES) {
       console.log(`${chalk.yellow('!')} ${chalk.yellow('Sufficient number of categories already exist, skipping seeding for categories.')}`);

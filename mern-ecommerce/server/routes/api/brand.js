@@ -45,12 +45,25 @@ router.post('/add', auth, role.check(ROLES.Admin), async (req, res) => {
 // fetch store brands api
 router.get('/list', async (req, res) => {
   try {
-    const brands = await Brand.find({
-      isActive: true
-    }).populate('merchant', 'name');
+    const page = parseInt(req.query.page) || 1;  // trang hiện tại
+    const limit = parseInt(req.query.limit) || 10;  // số item mỗi trang
+    const skip = (page - 1) * limit;
+
+    const filter = { isActive: true };
+
+    const brands = await Brand.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .populate('merchant', 'name');
+
+    const total = await Brand.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
-      brands
+      brands,
+      page,
+      totalPages,
+      total,
     });
   } catch (error) {
     res.status(400).json({
@@ -66,18 +79,28 @@ router.get(
   role.check(ROLES.Admin, ROLES.Merchant),
   async (req, res) => {
     try {
-      let brands = null;
+      const page = parseInt(req.query.page) || 1;  // trang hiện tại
+      const limit = parseInt(req.query.limit) || 10;  // số item mỗi trang
+      const skip = (page - 1) * limit;
 
+      let filter = {};
       if (req.user.merchant) {
-        brands = await Brand.find({
-          merchant: req.user.merchant
-        }).populate('merchant', 'name');
-      } else {
-        brands = await Brand.find({}).populate('merchant', 'name');
+        filter.merchant = req.user.merchant;
       }
 
+      const brands = await Brand.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .populate('merchant', 'name');
+
+      const total = await Brand.countDocuments(filter);
+      const totalPages = Math.ceil(total / limit);
+
       res.status(200).json({
-        brands
+        brands,
+        page,
+        totalPages,
+        total
       });
     } catch (error) {
       res.status(400).json({
@@ -118,21 +141,27 @@ router.get(
   role.check(ROLES.Admin, ROLES.Merchant),
   async (req, res) => {
     try {
-      let brands = null;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
 
+      let filter = {};
       if (req.user.merchant) {
-        brands = await Brand.find(
-          {
-            merchant: req.user.merchant
-          },
-          'name'
-        );
-      } else {
-        brands = await Brand.find({}, 'name');
+        filter.merchant = req.user.merchant;
       }
 
+      const brands = await Brand.find(filter, 'name')
+        .skip(skip)
+        .limit(limit);
+
+      const total = await Brand.countDocuments(filter);
+      const totalPages = Math.ceil(total / limit);
+
       res.status(200).json({
-        brands
+        brands,
+        page,
+        totalPages,
+        total,
       });
     } catch (error) {
       res.status(400).json({

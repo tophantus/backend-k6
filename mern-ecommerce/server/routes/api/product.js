@@ -55,20 +55,31 @@ router.get('/item/:slug', async (req, res) => {
 router.get('/list/search/:name', async (req, res) => {
   try {
     const name = req.params.name;
+    let { page = 1, limit = 10 } = req.query;
+    page = Number(page);
+    limit = Number(limit);
 
-    const productDoc = await Product.find(
-      { name: { $regex: new RegExp(name), $options: 'is' }, isActive: true },
-      { name: 1, slug: 1, imageUrl: 1, price: 1, _id: 0 }
-    );
+    const query = { name: { $regex: new RegExp(name), $options: 'is' }, isActive: true };
 
-    if (productDoc.length < 0) {
+    const totalCount = await Product.countDocuments(query);
+
+    const products = await Product.find(query, { name: 1, slug: 1, imageUrl: 1, price: 1, _id: 0 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    if (products.length === 0) {
       return res.status(404).json({
         message: 'No product found.'
       });
     }
 
+    const totalPages = Math.ceil(totalCount / limit);
+
     res.status(200).json({
-      products: productDoc
+      products,
+      totalPages,
+      currentPage: page,
+      totalCount
     });
   } catch (error) {
     res.status(400).json({
@@ -163,10 +174,23 @@ router.get('/list', async (req, res) => {
 
 router.get('/list/select', auth, async (req, res) => {
   try {
-    const products = await Product.find({}, 'name');
+    let { page = 1, limit = 10 } = req.query;
+    page = Number(page);
+    limit = Number(limit);
+
+    const totalCount = await Product.countDocuments();
+
+    const products = await Product.find({}, 'name')
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalPages = Math.ceil(totalCount / limit);
 
     res.status(200).json({
-      products
+      products,
+      totalPages,
+      currentPage: page,
+      totalCount
     });
   } catch (error) {
     res.status(400).json({
@@ -254,7 +278,12 @@ router.get(
   role.check(ROLES.Admin, ROLES.Merchant),
   async (req, res) => {
     try {
+      let { page = 1, limit = 10 } = req.query;
+      page = Number(page);
+      limit = Number(limit);
+
       let products = [];
+      let totalCount = 0;
 
       if (req.user.merchant) {
         const brands = await Brand.find({
@@ -263,7 +292,9 @@ router.get(
 
         const brandId = brands[0]?.['_id'];
 
-        products = await Product.find({})
+        totalCount = await Product.countDocuments({ brand: brandId });
+
+        products = await Product.find({ brand: brandId })
           .populate({
             path: 'brand',
             populate: {
@@ -271,19 +302,30 @@ router.get(
               model: 'Merchant'
             }
           })
-          .where('brand', brandId);
+          .skip((page - 1) * limit)
+          .limit(limit);
       } else {
-        products = await Product.find({}).populate({
-          path: 'brand',
-          populate: {
-            path: 'merchant',
-            model: 'Merchant'
-          }
-        });
+        totalCount = await Product.countDocuments();
+
+        products = await Product.find()
+          .populate({
+            path: 'brand',
+            populate: {
+              path: 'merchant',
+              model: 'Merchant'
+            }
+          })
+          .skip((page - 1) * limit)
+          .limit(limit);
       }
 
+      const totalPages = Math.ceil(totalCount / limit);
+
       res.status(200).json({
-        products
+        products,
+        totalPages,
+        currentPage: page,
+        totalCount
       });
     } catch (error) {
       res.status(400).json({

@@ -1,7 +1,6 @@
 import { check, sleep } from 'k6';
-import { getHeader, loginUser } from '../../helpers/auth.js';
-import { post } from '../../helpers/httpClient.js';
-import { getTestUser } from '../../helpers/user.js';
+import { getHeader, getUserToken } from '../../helpers/auth.js';
+import { post, put } from '../../helpers/httpClient.js';
 import { generateRandomAddress } from '../../utils/address.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 
@@ -19,21 +18,23 @@ export const options = {
   },
 };
 
+
+
 export function setup() {
-    const user = getTestUser()
-    const loginRes = loginUser(user.email, user.password);
-    return { token: loginRes.json('token') };
+    const token = getUserToken()
+
+    const addRes = post(API_ENDPOINT.ADDRESS.ADD, generateRandomAddress(), getHeader(token));
+
+    return { token, addressId: addRes.json('address')._id };
 }
 
 export default function (data) {
-    const randomAddress = generateRandomAddress();
-    const res = post(API_ENDPOINT.ADDRESS.ADD, randomAddress, getHeader(data.token));
+    const res = put(API_ENDPOINT.ADDRESS.UPDATE(data.addressId), generateRandomAddress(), getHeader(data.token));
 
     check(res, {
         'status 200': (r) => r.status === 200,
-        'has address': (r) => r.json('address') !== undefined,
-        'success true': (r) => r.json('success') === true,
+        'update success': (r) => r.json('success') === true,
     });
 
-    sleep(0.2);
+    sleep(0.1);
 }

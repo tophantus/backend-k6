@@ -1,7 +1,6 @@
 import { check, sleep } from 'k6';
-import { getHeader, loginUser } from '../../helpers/auth.js';
+import { getHeader } from '../../helpers/auth.js';
 import { get } from '../../helpers/httpClient.js';
-import { getTestUser } from '../../helpers/user.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 
 export const options = {
@@ -19,9 +18,7 @@ export const options = {
 };
 
 export function setup() {
-    const user = getTestUser();
-    const loginRes = loginUser(user.email, user.password);
-    return { token: loginRes.json('token') };
+    return { token: getUserToken() };
 }
 
 export default function (data) {
