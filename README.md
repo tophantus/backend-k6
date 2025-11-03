@@ -25,7 +25,12 @@
 3. Chọn **Data Source** vừa tạo → nhấn **Import**
 
 ## Chạy script K6
-1. Chỉnh sửa **tên script** và **file summary** trong file `.env`  
+1. Chỉnh sửa **tên script** và **file summary** trong file `.env`
+
+K6_SCRIPT=tests/product/product-get-item.test.js
+
+K6_SUMMARY=metrics/product/get-item-summary.json
+
 2. Chỉnh sửa **stage** trong script K6 tùy theo mục đích test  
 3. Chạy lệnh:
 
