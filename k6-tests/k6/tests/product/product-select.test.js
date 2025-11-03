@@ -4,11 +4,14 @@ import { getAdminToken, getHeader } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 
 export const options = {
-  vus: 10,
-  duration: '30s',
+  stages: [
+    { duration: '30s', target: 20 },
+    { duration: '1m', target: 50 },
+    { duration: '30s', target: 0 },
+  ],
   thresholds: {
     http_req_failed: ['rate<0.05'],
-    http_req_duration: ['p(95)<1000'],
+    http_req_duration: ['p(95)<1500'],
   },
 };
 
