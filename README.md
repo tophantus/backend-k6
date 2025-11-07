@@ -34,6 +34,8 @@ K6_SUMMARY=metrics/product/get-item-summary.json
 2. Chỉnh sửa **stage** trong script K6 tùy theo mục đích test  
 3. Chạy lệnh:
 
-`docker compose run --rm k6`
+`docker compose run --rm -e TEST_TYPE=smoke k6`
+
+- Chỉnh sửa type để chạy loại test khác nhau (smoke,load, stress)
 
 Xem thông số và đồ thị trên Grafana Dashboard hoặc trong file summary
