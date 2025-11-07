@@ -1,6 +1,6 @@
 import { check, sleep } from 'k6';
-import { post, put } from '../../helpers/httpClient.js';
-import { getAdminToken, getHeader } from '../../helpers/auth.js';
+import { post } from '../../helpers/httpClient.js';
+import { getHeader, getAdminToken, getUserToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomBrand } from '../../utils/brand.js';
 import { generateRandomProduct } from '../../utils/product.js';
@@ -43,44 +43,43 @@ const testOptions = {
 
 export const options = testOptions[TEST_TYPE];
 
-
 export function setup() {
-  const token = getAdminToken();
-  const headers = getHeader(token);
-  const brandPayload = generateRandomBrand();
-  
-  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, headers);
-  
-  check(brandRes, {
-    'brand created': (r) => r.status === 200 && r.json('success') === true,
-  });
-  
+  const adminToken = getAdminToken();
+  const adminHeaders = getHeader(adminToken);
+
+  const brandRes = post(API_ENDPOINT.BRAND.ADD, generateRandomBrand(), adminHeaders);
   const brandId = brandRes.json('brand._id');
 
-  const productPayload = generateRandomProduct(brandId);
-  const prodRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, headers);
-  check(prodRes, { 'product created': (r) => r.status === 200 && r.json('success') });
-  const productId = prodRes.json('product._id');
+  const productRes = post(API_ENDPOINT.PRODUCT.ADD, generateRandomProduct(brandId), adminHeaders);
+  const productId = productRes.json('product._id');
 
-  return { token, productId };
+  const userToken = getUserToken();
+  const headers = getHeader(userToken);
+
+  const cartPayload = { products: [{ product: productId, quantity: 1, price: 200000 }] };
+  const cartRes = post(API_ENDPOINT.CART.ADD, cartPayload, headers);
+  const cartId = cartRes.json('cartId');
+
+  const orderRes = post(API_ENDPOINT.ORDER.ADD, { cartId, total: 200000 }, headers);
+  const orderId = orderRes.json('order._id');
+
+  return { userToken, orderId };
 }
 
 export default function (data) {
-  const headers = getHeader(data.token);
+  const headers = getHeader(data.userToken);
 
-  const updatePayload = {
-    product: {
-      name: `UpdatedName_${__VU}_${__ITER}`,
-      description: 'Updated by K6',
-      price: 150000,
-    },
+  const payload = {
+    keyword: data.orderId,
+    page: 1,
+    limit: 5,
   };
 
-  const res = put(API_ENDPOINT.PRODUCT.UPDATE(data.productId), updatePayload, headers);
+  const res = post(API_ENDPOINT.ORDER.SEARCH, payload, headers);
 
   check(res, {
     'status 200': (r) => r.status === 200,
-    'update success': (r) => r.json('success') === true,
+    'found order': (r) => r.body.includes(data.orderId),
   });
 
   sleep(0.2);

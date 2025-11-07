@@ -128,6 +128,7 @@ router.get('/list', async (req, res) => {
       isActive: true
     });
 
+
     if (brandDoc) {
       basicQuery.push({
         $match: {
@@ -177,6 +178,8 @@ router.get('/list/select', auth, async (req, res) => {
     let { page = 1, limit = 10 } = req.query;
     page = Number(page);
     limit = Number(limit);
+
+    console.log("get select")
 
     const totalCount = await Product.countDocuments();
 

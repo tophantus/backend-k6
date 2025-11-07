@@ -1,8 +1,7 @@
 import { check, sleep } from 'k6';
-import { post, get } from '../../helpers/httpClient.js';
-import { getAdminToken, getHeader } from '../../helpers/auth.js';
+import { get } from '../../helpers/httpClient.js';
+import { getUserToken, getHeader } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
-import { generateRandomCategory } from '../../utils/category.js';
 
 const TEST_TYPE = __ENV.TEST_TYPE || 'smoke';
 
@@ -42,22 +41,21 @@ const testOptions = {
 
 export const options = testOptions[TEST_TYPE];
 
+
 export function setup() {
-  const token = getAdminToken()
-
-  const headers = getHeader(token);
-  const resAdd = post(API_ENDPOINT.CATEGORY.ADD, generateRandomCategory(), headers);
-
-  return { token, id: resAdd.json('category._id') };
+  const userToken = getUserToken();
+  return { userToken };
 }
 
-export default function (data) {
-  const res = get(API_ENDPOINT.CATEGORY.GET_BY_ID(data.id), getHeader(data.token));
+export default function(data) {
+  const headers = getHeader(data.userToken);
+
+  const res = get(API_ENDPOINT.WISHLIST.GET, headers);
 
   check(res, {
-    'status is 200': (r) => r.status === 200,
-    'has category name': (r) => !!r.json('category.name'),
+    'status 200': (r) => r.status === 200,
+    'wishlist is array': (r) => Array.isArray(r.json('wishlist')),
   });
 
-  sleep(0.3);
+  sleep(0.15);
 }

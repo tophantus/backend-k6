@@ -1,6 +1,6 @@
 import { check, sleep } from 'k6';
 import { post } from '../../helpers/httpClient.js';
-import { getAdminToken, getHeader } from '../../helpers/auth.js';
+import { getHeader, getAdminToken, getUserToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomBrand } from '../../utils/brand.js';
 import { generateRandomProduct } from '../../utils/product.js';
@@ -44,31 +44,44 @@ const testOptions = {
 export const options = testOptions[TEST_TYPE];
 
 export function setup() {
-  const token = getAdminToken();
-  const headers = getHeader(token);
+  const adminToken = getAdminToken();
+  const adminHeaders = getHeader(adminToken);
 
-  const brandPayload = generateRandomBrand();
-
-  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, headers);
-
-  check(brandRes, {
-    'brand created': (r) => r.status === 200 && r.json('success') === true,
-  });
-
+  const brandRes = post(API_ENDPOINT.BRAND.ADD, generateRandomBrand(), adminHeaders);
   const brandId = brandRes.json('brand._id');
-  return { token, brandId };
+
+  const productRes = post(API_ENDPOINT.PRODUCT.ADD, generateRandomProduct(brandId), adminHeaders);
+  const productId = productRes.json('product._id');
+
+  const userToken = getUserToken();
+  return { userToken, productId };
 }
 
 export default function (data) {
-  const headers = getHeader(data.token);
+  const headers = getHeader(data.userToken);
 
-  const payload = generateRandomProduct(data.brandId);
-  
-  const res = post(API_ENDPOINT.PRODUCT.ADD, payload, headers);
+  const cartPayload = {
+    products: [
+      { product: data.productId, quantity: 1, price: 200000 },
+    ],
+  };
 
-  check(res, {
-    'status 200': (r) => r.status === 200,
-    'product created': (r) => r.json('success') === true,
+  const cartRes = post(API_ENDPOINT.CART.ADD, cartPayload, headers);
+  check(cartRes, { 'cart created': (r) => r.status === 200 });
+
+  const cartId = cartRes.json('cartId');
+
+  const orderPayload = {
+    cartId,
+    total: 200000,
+  };
+
+  const orderRes = post(API_ENDPOINT.ORDER.ADD, orderPayload, headers);
+
+  check(orderRes, {
+    'order created 200': (r) => r.status === 200,
+    'success true': (r) => r.json('success') === true,
+    'has order id': (r) => !!r.json('order._id'),
   });
 
   sleep(0.3);

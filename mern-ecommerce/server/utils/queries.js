@@ -82,6 +82,7 @@ exports.getStoreProductsQuery = (min, max, rating) => {
   return basicQuery;
 };
 
+
 exports.getStoreProductsWishListQuery = userId => {
   const wishListQuery = [
     {

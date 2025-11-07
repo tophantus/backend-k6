@@ -1,6 +1,6 @@
 import { check, sleep } from 'k6';
-import { post, put } from '../../helpers/httpClient.js';
-import { getAdminToken, getHeader } from '../../helpers/auth.js';
+import { post } from '../../helpers/httpClient.js';
+import { getAdminToken, getHeader, getUserToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomBrand } from '../../utils/brand.js';
 import { generateRandomProduct } from '../../utils/product.js';
@@ -45,43 +45,43 @@ export const options = testOptions[TEST_TYPE];
 
 
 export function setup() {
-  const token = getAdminToken();
-  const headers = getHeader(token);
+  const adminToken = getAdminToken();
+  const adminHeaders = getHeader(adminToken);
+
   const brandPayload = generateRandomBrand();
-  
-  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, headers);
-  
+  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, adminHeaders);
   check(brandRes, {
     'brand created': (r) => r.status === 200 && r.json('success') === true,
   });
-  
   const brandId = brandRes.json('brand._id');
 
   const productPayload = generateRandomProduct(brandId);
-  const prodRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, headers);
-  check(prodRes, { 'product created': (r) => r.status === 200 && r.json('success') });
-  const productId = prodRes.json('product._id');
+  const productRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, adminHeaders);
+  check(productRes, {
+    'product created': (r) => r.status === 200 && r.json('success') === true,
+  });
+  const productId = productRes.json('product._id');
 
-  return { token, productId };
+  const userToken = getUserToken();
+
+  return { userToken, productId };
 }
 
-export default function (data) {
-  const headers = getHeader(data.token);
+export default function(data) {
+  const headers = getHeader(data.userToken);
 
-  const updatePayload = {
-    product: {
-      name: `UpdatedName_${__VU}_${__ITER}`,
-      description: 'Updated by K6',
-      price: 150000,
-    },
+  const reviewPayload = {
+    product: data.productId,
+    title: 'Awesome product',
+    comment: 'Really liked this product!',
+    rating: 5,
   };
 
-  const res = put(API_ENDPOINT.PRODUCT.UPDATE(data.productId), updatePayload, headers);
+  const res = post(API_ENDPOINT.REVIEW.ADD, reviewPayload, headers);
 
   check(res, {
-    'status 200': (r) => r.status === 200,
-    'update success': (r) => r.json('success') === true,
+    'review added': (r) => r.status === 200 && r.json('success') === true,
   });
 
-  sleep(0.2);
+  sleep(0.15)
 }

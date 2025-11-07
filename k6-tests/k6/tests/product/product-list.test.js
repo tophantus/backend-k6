@@ -2,20 +2,49 @@ import { check, sleep } from 'k6';
 import { get } from '../../helpers/httpClient.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 
-export const options = {
-  stages: [
-    { duration: '30s', target: 20 },
-    { duration: '1m', target: 50 },
-    { duration: '30s', target: 0 },
-  ],
-  thresholds: {
-    http_req_failed: ['rate<0.05'],
-    http_req_duration: ['p(95)<1500'],
+const TEST_TYPE = __ENV.TEST_TYPE || 'smoke';
+
+const testOptions = {
+  smoke: {
+    vus: 1,
+    duration: '10s',
+    thresholds: {
+      http_req_failed: ['rate<0.01'],
+      http_req_duration: ['p(95)<1000'],
+    },
+  },
+  load: {
+    stages: [
+      { duration: '30s', target: 10 },
+      { duration: '1m', target: 50 },
+      { duration: '30s', target: 0 },
+    ],
+    thresholds: {
+      http_req_failed: ['rate<0.01'],
+      http_req_duration: ['p(95)<1500'],
+    },
+  },
+  stress: {
+    stages: [
+      { duration: '1m', target: 50 },
+      { duration: '2m', target: 100 },
+      { duration: '2m', target: 200 },
+      { duration: '1m', target: 0 },
+    ],
+    thresholds: {
+      http_req_failed: ['rate<0.1'],
+      http_req_duration: ['p(95)<4000'],
+    },
   },
 };
 
+export const options = testOptions[TEST_TYPE];
+
 export default function () {
-  const res = get(`${API_ENDPOINT.PRODUCT.STORE_LIST}?sortOrder={"createdAt":-1}&rating=4&min=100&max=500&category=shoes&brand=wolff-hand-and-maggio&page=2&limit=40`);
+  const brand = "dietrich-inc";
+  const minPrice = randomInt(1, 500);
+  const maxPrice = randomInt(minPrice, 1500);
+  const res = get(`${API_ENDPOINT.PRODUCT.STORE_LIST}?sortOrder={"createdAt":-1}&min=${minPrice}&max=${maxPrice}&brand=${brand}`);
 
   check(res, {
     'status 200': (r) => r.status === 200,

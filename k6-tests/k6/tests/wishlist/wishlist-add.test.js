@@ -1,6 +1,6 @@
 import { check, sleep } from 'k6';
-import { post, put } from '../../helpers/httpClient.js';
-import { getAdminToken, getHeader } from '../../helpers/auth.js';
+import { del, post } from '../../helpers/httpClient.js';
+import { getUserToken, getHeader, getAdminToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomBrand } from '../../utils/brand.js';
 import { generateRandomProduct } from '../../utils/product.js';
@@ -45,43 +45,54 @@ export const options = testOptions[TEST_TYPE];
 
 
 export function setup() {
-  const token = getAdminToken();
-  const headers = getHeader(token);
+  const adminToken = getAdminToken();
+  const adminHeaders = getHeader(adminToken);
+
   const brandPayload = generateRandomBrand();
-  
-  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, headers);
-  
+  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, adminHeaders);
   check(brandRes, {
     'brand created': (r) => r.status === 200 && r.json('success') === true,
   });
-  
   const brandId = brandRes.json('brand._id');
 
   const productPayload = generateRandomProduct(brandId);
-  const prodRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, headers);
-  check(prodRes, { 'product created': (r) => r.status === 200 && r.json('success') });
-  const productId = prodRes.json('product._id');
+  const productRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, adminHeaders);
+  check(productRes, {
+    'product created': (r) => r.status === 200 && r.json('success') === true,
+  });
+  const productId = productRes.json('product._id');
 
-  return { token, productId };
+  const userToken = getUserToken();
+
+  return { userToken, productId, brandId };
 }
 
-export default function (data) {
-  const headers = getHeader(data.token);
+export default function(data) {
+  const headers = getHeader(data.userToken);
 
-  const updatePayload = {
-    product: {
-      name: `UpdatedName_${__VU}_${__ITER}`,
-      description: 'Updated by K6',
-      price: 150000,
-    },
+  const payload = {
+    product: data.productId,
+    isLiked: true,
   };
 
-  const res = put(API_ENDPOINT.PRODUCT.UPDATE(data.productId), updatePayload, headers);
+  const res = post(API_ENDPOINT.WISHLIST.ADD, payload, headers);
 
   check(res, {
     'status 200': (r) => r.status === 200,
-    'update success': (r) => r.json('success') === true,
+    'success true': (r) => r.json('success') === true,
   });
 
-  sleep(0.2);
+  sleep(0.15)
+}
+
+export function teardown(data) {
+  const headers = getHeader(data.adminToken);
+
+
+  const resProduct = del(API_ENDPOINT.PRODUCT.DELETE(data.productId), headers);
+  check(resProduct, { 'deleted product': (r) => r.status === 200 });
+
+
+  const resBrand = del(API_ENDPOINT.BRAND.DELETE(data.brandId), headers);
+  check(resBrand, { 'deleted brand': (r) => r.status === 200 });
 }

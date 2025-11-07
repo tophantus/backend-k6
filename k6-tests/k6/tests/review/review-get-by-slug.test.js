@@ -1,5 +1,5 @@
 import { check, sleep } from 'k6';
-import { post, put } from '../../helpers/httpClient.js';
+import { del, get, post } from '../../helpers/httpClient.js';
 import { getAdminToken, getHeader } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomBrand } from '../../utils/brand.js';
@@ -45,43 +45,47 @@ export const options = testOptions[TEST_TYPE];
 
 
 export function setup() {
-  const token = getAdminToken();
-  const headers = getHeader(token);
+  const adminToken = getAdminToken();
+  const adminHeaders = getHeader(adminToken);
+
   const brandPayload = generateRandomBrand();
-  
-  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, headers);
-  
+  const brandRes = post(API_ENDPOINT.BRAND.ADD, brandPayload, adminHeaders);
   check(brandRes, {
     'brand created': (r) => r.status === 200 && r.json('success') === true,
   });
-  
   const brandId = brandRes.json('brand._id');
 
   const productPayload = generateRandomProduct(brandId);
-  const prodRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, headers);
-  check(prodRes, { 'product created': (r) => r.status === 200 && r.json('success') });
-  const productId = prodRes.json('product._id');
+  const productRes = post(API_ENDPOINT.PRODUCT.ADD, productPayload, adminHeaders);
+  check(productRes, {
+    'product created': (r) => r.status === 200 && r.json('success') === true,
+  });
+  const productSlug = productRes.json('product.slug');
+  const productId = productRes.json('product._id');
 
-  return { token, productId };
+
+  return { adminToken, productSlug, brandId, productId};
 }
 
 export default function (data) {
-  const headers = getHeader(data.token);
-
-  const updatePayload = {
-    product: {
-      name: `UpdatedName_${__VU}_${__ITER}`,
-      description: 'Updated by K6',
-      price: 150000,
-    },
-  };
-
-  const res = put(API_ENDPOINT.PRODUCT.UPDATE(data.productId), updatePayload, headers);
+  const res = get(API_ENDPOINT.REVIEW.GET_BY_SLUG(data.productSlug));
 
   check(res, {
-    'status 200': (r) => r.status === 200,
-    'update success': (r) => r.json('success') === true,
+    'get reviews by slug success': (r) => r.status === 200 && Array.isArray(r.json('reviews')),
   });
 
-  sleep(0.2);
+  sleep(0.15)
+}
+
+
+export function teardown(data) {
+  const headers = getHeader(data.adminToken);
+
+
+  const resProduct = del(API_ENDPOINT.PRODUCT.DELETE(data.productId), headers);
+  check(resProduct, { 'deleted product': (r) => r.status === 200 });
+
+
+  const resBrand = del(API_ENDPOINT.BRAND.DELETE(data.brandId), headers);
+  check(resBrand, { 'deleted brand': (r) => r.status === 200 });
 }

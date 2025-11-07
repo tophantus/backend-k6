@@ -18,7 +18,8 @@ export const API_ENDPOINT = {
         LIST: '/api/brand/list',
         GET_ALL: '/api/brand',
         LIST_SELECT: '/api/brand/list/select',
-        UPDATE: (id) => `/api/brand/${id}`
+        UPDATE: (id) => `/api/brand/${id}`,
+        DELETE: (id) => `/api/brand/delete/${id}`
     },
     CATEGORY: {
         ADD: '/api/category/add',
@@ -34,9 +35,30 @@ export const API_ENDPOINT = {
         ITEM: (slug) => `/api/product/item/${slug}`,
         STORE_LIST: '/api/product/list',
         SELECT: '/api/product/list/select',
+        STORE_SEARCH: (keyword) => `/api/product/list/search/${keyword}`,
+        DELETE: (id) => `/api/product/delete/${id}`,
     },
     CART: {
         ADD: "/api/cart/add",
-        ADD_PRODUCT: (cartId) => `/api/cart/add/${cartId}`
-    }
+        ADD_PRODUCT: (cartId) => `/api/cart/add/${cartId}`,
+        DELETE: (id) => `/api/cart/delete/${id}`
+    },
+    ORDER: {
+        ADD: '/api/order/add',
+        SEARCH: '/api/order/search',
+        GET: (id) => `/api/order/${id}`,
+        MY_ORDERS: '/api/order/me',
+        CANCEL: (id) => `/api/order/cancel/${id}`
+    },
+    REVIEW: {
+        ADD: '/api/review/add',
+        GET_LIST: '/api/review',
+        GET_BY_SLUG: (slug) => `/api/review/${slug}`,
+        UPDATE: (id) => `/api/review/${id}`,
+        DELETE: (id) => `/api/review/delete/${id}`
+    },
+    WISHLIST: {
+        ADD: '/api/wishlist',
+        GET: '/api/wishlist',
+    },
 }

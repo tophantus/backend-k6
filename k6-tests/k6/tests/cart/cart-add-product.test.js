@@ -3,18 +3,45 @@ import { post } from '../../helpers/httpClient.js';
 import { getAdminToken, getHeader, getUserToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomProduct } from '../../utils/product.js';
+import { generateRandomBrand } from '../../utils/brand.js';
 
-export const options = {
-  stages: [
-    { duration: '30s', target: 20 },
-    { duration: '1m', target: 50 },
-    { duration: '30s', target: 0 },
-  ],
-  thresholds: {
-    http_req_failed: ['rate<0.05'],
-    http_req_duration: ['p(95)<1500'],
+const TEST_TYPE = __ENV.TEST_TYPE || 'smoke';
+
+const testOptions = {
+  smoke: {
+    vus: 1,
+    duration: '10s',
+    thresholds: {
+      http_req_failed: ['rate<0.01'],
+      http_req_duration: ['p(95)<1000'],
+    },
+  },
+  load: {
+    stages: [
+      { duration: '30s', target: 10 },
+      { duration: '1m', target: 50 },
+      { duration: '30s', target: 0 },
+    ],
+    thresholds: {
+      http_req_failed: ['rate<0.01'],
+      http_req_duration: ['p(95)<1500'],
+    },
+  },
+  stress: {
+    stages: [
+      { duration: '1m', target: 50 },
+      { duration: '2m', target: 100 },
+      { duration: '2m', target: 200 },
+      { duration: '1m', target: 0 },
+    ],
+    thresholds: {
+      http_req_failed: ['rate<0.1'],
+      http_req_duration: ['p(95)<4000'],
+    },
   },
 };
+
+export const options = testOptions[TEST_TYPE];
 
 export function setup() {
   const adminToken = getAdminToken();
@@ -32,7 +59,7 @@ export function setup() {
   const brandId = brandRes.json('brand._id');
 
   const createProduct = () => {
-    const payload = generateRandomProduct();
+    const payload = generateRandomProduct(brandId);
     const res = post(API_ENDPOINT.PRODUCT.ADD, payload, adminHeaders);
     check(res, { 'product created': (r) => r.status === 200 });
     return res.json('product._id');
@@ -59,13 +86,12 @@ export function setup() {
 
   const cartId = resCart.json('cartId');
 
-  return { userToken, product2, cartId };
+  return { userToken, product2, product1, brandId, cartId };
 }
 
 export default function (data) {
   const headers = getHeader(data.userToken);
 
-  // 🧩 payload thêm 1 sản phẩm mới vào giỏ hiện có
   const addProductPayload = {
     product: {
       product: data.product2,
@@ -85,3 +111,20 @@ export default function (data) {
 
   sleep(0.3);
 }
+
+export function teardown(data) {
+  const headers = getHeader(data.adminToken);
+  const resCart = del(API_ENDPOINT.CART.DELETE(data.cartId), headers);
+  check(resCart, { 'deleted cart': (r) => r.status === 200 });
+
+  const resProduct1 = del(API_ENDPOINT.PRODUCT.DELETE(data.product1), headers);
+  check(resProduct1, { 'deleted product1': (r) => r.status === 200 });
+
+  const resProduct2 = del(API_ENDPOINT.PRODUCT.DELETE(data.product2), headers);
+  check(resProduct2, { 'deleted product2': (r) => r.status === 200 });
+
+
+  const resBrand = del(API_ENDPOINT.BRAND.DELETE(data.brandId), headers);
+  check(resBrand, { 'deleted brand': (r) => r.status === 200 });
+}
+
