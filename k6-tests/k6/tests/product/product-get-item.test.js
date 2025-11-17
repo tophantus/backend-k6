@@ -4,6 +4,7 @@ import { getHeader, getAdminToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomCategory } from '../../utils/category.js';
 import { generateRandomProduct } from '../../utils/product.js';
+import { generateRandomBrand } from '../../utils/brand.js';
 
 const TEST_TYPE = __ENV.TEST_TYPE || 'smoke';
 
@@ -47,11 +48,12 @@ export function setup() {
   const token = getAdminToken();
   const headers = getHeader(token);
 
-  const cateRes = post(API_ENDPOINT.CATEGORY.ADD, generateRandomCategory(), headers);
-  check(cateRes, { 'category created': (r) => r.status === 200 && r.json('success') });
-  const categoryId = cateRes.json('category._id');
+  const brand = generateRandomBrand();
+  const brandRes = post(API_ENDPOINT.BRAND.ADD, brand, headers);
+  const brandId = brandRes.json('brand._id');
+ 
 
-  const prodRes = post(API_ENDPOINT.PRODUCT.ADD, generateRandomProduct(null, categoryId), headers);
+  const prodRes = post(API_ENDPOINT.PRODUCT.ADD, generateRandomProduct(brandId), headers);
   check(prodRes, { 'product created': (r) => r.status === 200 && r.json('success') });
   const product = prodRes.json('product');
   const slug = product.slug;
