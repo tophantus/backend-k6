@@ -12,7 +12,7 @@ const testOptions = {
     vus: 1,
     duration: '10s',
     thresholds: {
-      http_req_duration: ['p(95)<1000'],
+      http_req_duration: ['p(95)<500'],
     },
   },
   load: {
@@ -22,7 +22,7 @@ const testOptions = {
       { duration: '30s', target: 0 },
     ],
     thresholds: {
-      http_req_duration: ['p(95)<1500'],
+      http_req_duration: ['p(95)<500'],
     },
   },
   stress: {
@@ -33,7 +33,7 @@ const testOptions = {
       { duration: '1m', target: 0 },
     ],
     thresholds: {
-      http_req_duration: ['p(95)<4000'],
+      http_req_duration: ['p(95)<2000'],
     },
   },
 };
@@ -72,8 +72,8 @@ export default function (data) {
   const allKeywords = [...data.keywords, ...data.fakeKeywords];
   const keyword = allKeywords[Math.floor(Math.random() * allKeywords.length)];
 
-  const url = `${API_ENDPOINT.PRODUCT.STORE_SEARCH(keyword)}?page=1&limit=5`;
-  const res = get(url);
+  const url = `${API_ENDPOINT.PRODUCT.STORE_SEARCH(keyword)}?page=1&limit=20`;
+  const res = get(url, {}, "/api/product/list/search");
   const isFake = data.fakeKeywords.includes(keyword);
 
   if (isFake) {
@@ -108,3 +108,14 @@ export function teardown(data) {
   const resBrand = del(API_ENDPOINT.BRAND.DELETE(data.brandId), headers);
   check(resBrand, { 'deleted brand': (r) => r.status === 200 });
 }
+
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+
+export function handleSummary(data) {
+  const type = TEST_TYPE || "unknown";
+  
+    return {
+      [`/results/search_product_${type}.html`]: htmlReport(data),
+    };
+}
+

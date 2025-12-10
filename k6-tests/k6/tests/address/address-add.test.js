@@ -48,7 +48,7 @@ export function setup() {
 
 export default function (data) {
     const randomAddress = generateRandomAddress();
-    const res = post(API_ENDPOINT.ADDRESS.ADD, randomAddress, getHeader(data.token));
+    const res = post(API_ENDPOINT.ADDRESS.ADD, randomAddress, getHeader(data.token), API_ENDPOINT.ADDRESS.ADD);
 
     check(res, {
         'status 200': (r) => r.status === 200,

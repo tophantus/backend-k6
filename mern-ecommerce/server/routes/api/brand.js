@@ -45,8 +45,8 @@ router.post('/add', auth, role.check(ROLES.Admin), async (req, res) => {
 // fetch store brands api
 router.get('/list', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;  // trang hiện tại
-    const limit = parseInt(req.query.limit) || 10;  // số item mỗi trang
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     const filter = { isActive: true };

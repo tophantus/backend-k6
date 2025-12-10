@@ -50,7 +50,7 @@ export default function (data) {
   const headers = getHeader(data.token);
   const payload = generateRandomCategory()
 
-  const res = post(API_ENDPOINT.CATEGORY.ADD, payload, headers);
+  const res = post(API_ENDPOINT.CATEGORY.ADD, payload, headers, API_ENDPOINT.CATEGORY.ADD);
 
   check(res, {
     'status is 200': (r) => r.status === 200,

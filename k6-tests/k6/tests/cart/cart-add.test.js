@@ -85,7 +85,7 @@ export default function (data) {
     ],
   };
 
-  const res = post(API_ENDPOINT.CART.ADD, payload, headers);
+  const res = post(API_ENDPOINT.CART.ADD, payload, headers, API_ENDPOINT.CART.ADD);
 
   check(res, {
     'status 200': (r) => r.status === 200,

@@ -4,6 +4,8 @@ import { getAdminToken, getHeader, getUserToken } from '../../helpers/auth.js';
 import { API_ENDPOINT } from '../../constants/endpoint.js';
 import { generateRandomBrand } from '../../utils/brand.js';
 import { generateRandomProduct } from '../../utils/product.js';
+const users = JSON.parse(open('../../data/users.json'));
+import { registerUser } from '../../helpers/auth.js';
 
 const TEST_TYPE = __ENV.TEST_TYPE || 'smoke';
 
@@ -36,7 +38,7 @@ const testOptions = {
     ],
     thresholds: {
       http_req_failed: ['rate<0.1'],
-      http_req_duration: ['p(95)<4000'],
+      http_req_duration: ['p(95)<2000'],
     },
   },
 };
@@ -66,11 +68,31 @@ export function setup() {
   const productId = productRes.json('product._id');
   const productSlug = productRes.json('product.slug');
 
-  return { adminToken, productId, productSlug, brandId, keyword };
+  const tokens = [];
+  const ids = [];
+
+  for (let i = 0; i < 200; i++) {
+    const user = users[0];
+
+    const randomEmail = `test${Date.now()}@example.com`;
+    const newUser = { ...user, email: randomEmail };
+    const res = registerUser(newUser);
+    check(res, {
+      'registered user': (r) => r.status === 200 && r.json('token') !== undefined,
+    });
+
+    const token = res.json('token');
+    const id = res.json("user.id")
+    tokens.push(token);
+    ids.push(id);
+  }
+
+  return { adminToken, productId, productSlug, brandId, keyword, tokens, ids };
 }
 
 export default function(data) {
-  const headers = getHeader(getUserToken());
+  const token = data.tokens[(__VU - 1) % data.tokens.length];
+  const headers = getHeader(token);
 
   const searchUrl = API_ENDPOINT.PRODUCT.STORE_SEARCH(data.keyword);
   const searchRes = get(searchUrl);
@@ -141,5 +163,18 @@ export function teardown(data) {
 
   const resBrand = del(API_ENDPOINT.BRAND.DELETE(data.brandId), headers);
   check(resBrand, { 'deleted brand': (r) => r.status === 200 });
+
+  const resDeleteUsers = del(API_ENDPOINT.USER.DELETE, headers, "", {userIds: data.ids })
+  check(resDeleteUsers, {"deleted users": (r) => r.status === 200} )
 }
 
+
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+
+export function handleSummary(data) {
+  const type = TEST_TYPE || "unknown";
+
+  return {
+    [`/results/shopping_flow_${type}.html`]: htmlReport(data),
+  };
+}

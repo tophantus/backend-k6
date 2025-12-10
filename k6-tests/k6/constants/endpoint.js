@@ -24,6 +24,7 @@ export const API_ENDPOINT = {
     CATEGORY: {
         ADD: '/api/category/add',
         GET_ALL: '/api/category',
+        GET_ALL_PUBLIC: '/api/category/list',
         GET_BY_ID: (id) => `/api/category/${id}`,
         UPDATE: (id) => `/api/category${id}`,
     },
@@ -61,4 +62,7 @@ export const API_ENDPOINT = {
         ADD: '/api/wishlist',
         GET: '/api/wishlist',
     },
+    USER: {
+        DELETE: "/api/user"
+    }
 }

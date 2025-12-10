@@ -8,11 +8,11 @@ export function getHeader(token) {
 }
 
 export function registerUser(user) {
-    return post('/api/auth/register', user);
+    return post('/api/auth/register', user, '/api/auth/register');
 }
 
 export function loginUser(email, password) {
-    return post('/api/auth/login', { email, password });
+    return post('/api/auth/login', { email, password }, '/api/auth/login');
 }
 
 export function getUserToken() {

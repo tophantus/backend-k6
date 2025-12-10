@@ -46,7 +46,7 @@ export function setup() {
 }
 
 export default function (data) {
-  const res = get(`${API_ENDPOINT.BRAND.GET_ALL}?page=1&limit=30`, getHeader(data.token));
+  const res = get(`${API_ENDPOINT.BRAND.GET_ALL}?page=1&limit=30`, getHeader(data.token), API_ENDPOINT.BRAND.GET_ALL);
 
   check(res, {
     'status 200': (r) => r.status === 200,

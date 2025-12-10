@@ -102,7 +102,7 @@ export default function (data) {
   };
 
   const url = API_ENDPOINT.CART.ADD_PRODUCT(data.cartId);
-  const res = post(url, addProductPayload, headers);
+  const res = post(url, addProductPayload, headers, "/api/cart/add/{id}");
 
   check(res, {
     'status 200': (r) => r.status === 200,

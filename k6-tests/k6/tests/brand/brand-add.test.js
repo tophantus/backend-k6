@@ -48,7 +48,7 @@ export function setup() {
 
 export default function (data) {
   const payload = generateRandomBrand()
-  const res = post(API_ENDPOINT.BRAND.ADD, payload, getHeader(data.token));
+  const res = post(API_ENDPOINT.BRAND.ADD, payload, getHeader(data.token), API_ENDPOINT.BRAND.ADD);
 
   check(res, {
     'status 200': (r) => r.status === 200,

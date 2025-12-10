@@ -1,6 +1,6 @@
 import { check, sleep } from 'k6';
 import { registerUser } from '../../helpers/auth.js';
-import users from '../../data/users.json' assert { type: "json" };
+const users = JSON.parse(open('../../data/users.json'));
 
 const TEST_TYPE = __ENV.TEST_TYPE || 'smoke';
 
